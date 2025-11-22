@@ -38,7 +38,7 @@ class _JobsScreenState extends State<JobsScreen> {
         child: Padding(
           padding: EdgeInsets.all(20.0),
           child: Text(
-            'Jobs Screen - Team member working on this screen will replace this content',
+            'Jobs Screen',
             style: TextStyle(fontSize: 16),
             textAlign: TextAlign.center,
           ),
