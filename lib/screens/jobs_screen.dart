@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import '../widgets/custom_bottom_nav.dart';
+import 'forms/job_application_form.dart';
 
 class Job {
+  final String id;
   final String title;
   final String company;
   final String description;
@@ -9,6 +10,7 @@ class Job {
   final IconData icon;
 
   const Job({
+    required this.id,
     required this.title,
     required this.company,
     required this.description,
@@ -17,104 +19,73 @@ class Job {
   });
 }
 
-class JobsScreen extends StatefulWidget {
-  const JobsScreen({super.key});
+class JobsContent extends StatefulWidget {
+  const JobsContent({super.key});
 
   @override
-  State<JobsScreen> createState() => _JobsScreenState();
+  State<JobsContent> createState() => _JobsContentState();
 }
 
-class _JobsScreenState extends State<JobsScreen> {
-  int _currentIndex = 1;
-
+class _JobsContentState extends State<JobsContent> {
   final List<Job> _jobs = const [
     Job(
+      id: '1',
       title: 'Software Developer',
       company: 'Tech Company',
       description: 'Join our team to build innovative mobile and web applications. Experience with Flutter and React preferred.',
       salary: '\$1500/mo',
-      icon: Icons.computer,
+      icon: Icons.computer_rounded,
     ),
     Job(
+      id: '2',
       title: 'Marketing Manager',
       company: 'Local Business',
       description: 'Lead marketing campaigns and brand development. Strong communication and creativity required.',
       salary: '\$800/mo',
-      icon: Icons.campaign,
+      icon: Icons.campaign_rounded,
     ),
     Job(
+      id: '3',
       title: 'Teacher',
       company: 'School District',
       description: 'Educate and inspire students in primary education. Teaching certification required.',
       salary: '\$500/mo',
-      icon: Icons.school,
+      icon: Icons.school_rounded,
     ),
     Job(
+      id: '4',
       title: 'Nurse',
       company: 'Hospital',
       description: 'Provide patient care in a busy hospital environment. Nursing degree and registration required.',
       salary: '\$1200/mo',
-      icon: Icons.local_hospital,
+      icon: Icons.local_hospital_rounded,
     ),
     Job(
+      id: '5',
       title: 'Accountant',
       company: 'Finance Firm',
       description: 'Manage financial records and prepare reports. ACCA or ZICA qualification preferred.',
       salary: '\$900/mo',
-      icon: Icons.account_balance,
+      icon: Icons.account_balance_rounded,
     ),
     Job(
+      id: '6',
       title: 'Driver',
       company: 'Logistics Company',
       description: 'Transport goods across Zambia. Valid driver\'s license and clean record required.',
       salary: '\$400/mo',
-      icon: Icons.local_shipping,
+      icon: Icons.local_shipping_rounded,
     ),
   ];
 
-  void _onItemTapped(int index) {
-    if (index == _currentIndex) return;
-    setState(() => _currentIndex = index);
-    _navigateToTab(index);
-  }
-
-  void _navigateToTab(int index) {
-    switch (index) {
-      case 0: Navigator.pushReplacementNamed(context, '/homepage'); break;
-      case 1: break;
-      case 2: Navigator.pushReplacementNamed(context, '/volunteer'); break;
-      case 3: Navigator.pushReplacementNamed(context, '/explore'); break;
-      case 4: Navigator.pushReplacementNamed(context, '/profile'); break;
-    }
-  }
-
   void _applyForJob(Job job) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Apply for ${job.title}'),
-        content: Text('Would you like to apply for the ${job.title} position at ${job.company}?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Application submitted for ${job.title}!'),
-                  backgroundColor: const Color(0xFF4CAF50),
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4CAF50),
-            ),
-            child: const Text('Apply', style: TextStyle(color: Colors.white)),
-          ),
-        ],
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => JobApplicationForm(
+          jobTitle: job.title,
+          company: job.company,
+        ),
       ),
     );
   }
@@ -123,10 +94,7 @@ class _JobsScreenState extends State<JobsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Find Jobs',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+        title: const Text('Find Jobs', style: TextStyle(fontWeight: FontWeight.w600)),
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
@@ -135,24 +103,36 @@ class _JobsScreenState extends State<JobsScreen> {
         padding: const EdgeInsets.all(16),
         itemCount: _jobs.length,
         itemBuilder: (context, index) {
-          final job = _jobs[index];
-          return _buildJobCard(job);
+          return _JobCard(
+            job: _jobs[index],
+            onApply: () => _applyForJob(_jobs[index]),
+          );
         },
-      ),
-      bottomNavigationBar: CustomBottomNav(
-        currentIndex: _currentIndex,
-        onTap: _onItemTapped,
       ),
     );
   }
+}
 
-  Widget _buildJobCard(Job job) {
-    return Card(
+class _JobCard extends StatelessWidget {
+  final Job job;
+  final VoidCallback onApply;
+
+  const _JobCard({required this.job, required this.onApply});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.shade200),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(15),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -166,14 +146,10 @@ class _JobsScreenState extends State<JobsScreen> {
                   width: 50,
                   height: 50,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF4CAF50).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(25),
+                    color: const Color(0xFF4CAF50).withAlpha(25),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(
-                    job.icon,
-                    color: const Color(0xFF4CAF50),
-                    size: 28,
-                  ),
+                  child: Icon(job.icon, color: const Color(0xFF4CAF50), size: 28),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -183,28 +159,32 @@ class _JobsScreenState extends State<JobsScreen> {
                       Text(
                         job.title,
                         style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
                           color: Color(0xFF212121),
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         job.company,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade600,
-                        ),
+                        style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                       ),
                     ],
                   ),
                 ),
-                Text(
-                  job.salary,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF4CAF50),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4CAF50).withAlpha(25),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    job.salary,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF4CAF50),
+                    ),
                   ),
                 ),
               ],
@@ -212,31 +192,21 @@ class _JobsScreenState extends State<JobsScreen> {
             const SizedBox(height: 12),
             Text(
               job.description,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade700,
-                height: 1.4,
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade700, height: 1.4),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 16),
             Align(
               alignment: Alignment.centerRight,
-              child: ElevatedButton(
-                onPressed: () => _applyForJob(job),
-                style: ElevatedButton.styleFrom(
+              child: FilledButton(
+                onPressed: onApply,
+                style: FilledButton.styleFrom(
                   backgroundColor: const Color(0xFF4CAF50),
-                  foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                child: const Text(
-                  'Apply',
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
+                child: const Text('Apply', style: TextStyle(fontWeight: FontWeight.w600)),
               ),
             ),
           ],

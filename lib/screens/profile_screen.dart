@@ -1,61 +1,51 @@
 import 'package:flutter/material.dart';
-import '../widgets/custom_bottom_nav.dart';
+import 'forms/edit_profile_form.dart';
 
-class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+class ProfileContent extends StatefulWidget {
+  const ProfileContent({super.key});
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  State<ProfileContent> createState() => _ProfileContentState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
-  int _currentIndex = 4;
-
-  void _onItemTapped(int index) {
-    if (index == _currentIndex) return;
-    setState(() => _currentIndex = index);
-    _navigateToTab(index);
-  }
-
-  void _navigateToTab(int index) {
-    switch (index) {
-      case 0: Navigator.pushReplacementNamed(context, '/homepage'); break;
-      case 1: Navigator.pushReplacementNamed(context, '/jobs'); break;
-      case 2: Navigator.pushReplacementNamed(context, '/volunteer'); break;
-      case 3: Navigator.pushReplacementNamed(context, '/explore'); break;
-      case 4: break;
-    }
-  }
-
+class _ProfileContentState extends State<ProfileContent> {
   void _handleMenuTap(String menuItem) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$menuItem - Coming soon!'),
-        duration: const Duration(seconds: 1),
-      ),
-    );
+    if (menuItem == 'My Account') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const EditProfileForm()),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('$menuItem - Coming soon!'),
+          duration: const Duration(seconds: 1),
+        ),
+      );
+    }
   }
 
   void _handleLogout() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Log Out'),
         content: const Text('Are you sure you want to log out?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(ctx),
             child: const Text('Cancel'),
           ),
-          ElevatedButton(
+          FilledButton(
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop(ctx);
               Navigator.pushReplacementNamed(context, '/login');
             },
-            style: ElevatedButton.styleFrom(
+            style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFFF44336),
             ),
-            child: const Text('Log Out', style: TextStyle(color: Colors.white)),
+            child: const Text('Log Out'),
           ),
         ],
       ),
@@ -80,32 +70,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 24),
             _buildProfileSection(),
             const SizedBox(height: 32),
-            _buildMenuItem(
+            _ProfileMenuItem(
               icon: Icons.person_outline,
               title: 'My Account',
               onTap: () => _handleMenuTap('My Account'),
             ),
-            _buildMenuItem(
+            _ProfileMenuItem(
               icon: Icons.work_outline,
               title: 'My Applications',
               onTap: () => _handleMenuTap('My Applications'),
             ),
-            _buildMenuItem(
+            _ProfileMenuItem(
               icon: Icons.volunteer_activism_outlined,
               title: 'My Volunteering',
               onTap: () => _handleMenuTap('My Volunteering'),
             ),
-            _buildMenuItem(
+            _ProfileMenuItem(
               icon: Icons.bookmark_outline,
               title: 'Saved Destinations',
               onTap: () => _handleMenuTap('Saved Destinations'),
             ),
-            _buildMenuItem(
+            _ProfileMenuItem(
               icon: Icons.settings_outlined,
               title: 'Settings',
               onTap: () => _handleMenuTap('Settings'),
             ),
-            _buildMenuItem(
+            _ProfileMenuItem(
               icon: Icons.help_outline,
               title: 'Help & Support',
               onTap: () => _handleMenuTap('Help & Support'),
@@ -115,10 +105,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 32),
           ],
         ),
-      ),
-      bottomNavigationBar: CustomBottomNav(
-        currentIndex: _currentIndex,
-        onTap: _onItemTapped,
       ),
     );
   }
@@ -160,39 +146,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildMenuItem({
-    required IconData icon,
-    required String title,
-    required VoidCallback onTap,
-  }) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: ListTile(
-        leading: Icon(
-          icon,
-          color: Colors.grey.shade700,
-        ),
-        title: Text(
-          title,
-          style: const TextStyle(
-            fontSize: 16,
-            color: Color(0xFF212121),
-          ),
-        ),
-        trailing: Icon(
-          Icons.chevron_right,
-          color: Colors.grey.shade400,
-        ),
-        onTap: onTap,
-      ),
-    );
-  }
-
   Widget _buildLogoutButton() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -215,6 +168,90 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
         onTap: _handleLogout,
+      ),
+    );
+  }
+}
+
+class _ProfileMenuItem extends StatefulWidget {
+  final IconData icon;
+  final String title;
+  final VoidCallback onTap;
+
+  const _ProfileMenuItem({
+    required this.icon,
+    required this.title,
+    required this.onTap,
+  });
+
+  @override
+  State<_ProfileMenuItem> createState() => _ProfileMenuItemState();
+}
+
+class _ProfileMenuItemState extends State<_ProfileMenuItem> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 80),
+      vsync: this,
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.98).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => _controller.forward(),
+      onTapUp: (_) {
+        _controller.reverse();
+        widget.onTap();
+      },
+      onTapCancel: () => _controller.reverse(),
+      child: AnimatedBuilder(
+        animation: _scaleAnimation,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: _scaleAnimation.value,
+            child: child,
+          );
+        },
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          child: ListTile(
+            leading: Icon(
+              widget.icon,
+              color: Colors.grey.shade700,
+            ),
+            title: Text(
+              widget.title,
+              style: const TextStyle(
+                fontSize: 16,
+                color: Color(0xFF212121),
+              ),
+            ),
+            trailing: Icon(
+              Icons.chevron_right,
+              color: Colors.grey.shade400,
+            ),
+          ),
+        ),
       ),
     );
   }

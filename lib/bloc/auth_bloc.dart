@@ -1,5 +1,4 @@
 import 'package:bloc/bloc.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
 import '../models/user_model.dart';
@@ -7,67 +6,69 @@ import 'auth_event.dart';
 import 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  final AuthService _authService = AuthService();
-  final FirestoreService _firestoreService = FirestoreService();
+  final AuthService _authService;
+  final FirestoreService _firestoreService;
 
-  AuthBloc() : super(AuthInitial()) {
+  AuthBloc({
+    AuthService? authService,
+    FirestoreService? firestoreService,
+  })  : _authService = authService ?? AuthService(),
+        _firestoreService = firestoreService ?? FirestoreService(),
+        super(AuthInitial()) {
     on<LoginEvent>(_onLogin);
     on<SignupEvent>(_onSignup);
     on<GoogleAuthEvent>(_onGoogleAuth);
     on<GuestLoginEvent>(_onGuestLogin);
+    on<LogoutEvent>(_onLogout);
     on<ResetAuthEvent>(_onResetAuth);
   }
 
   Future<void> _onLogin(LoginEvent event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
     try {
-      await _authService.signInWithEmail(event.email, event.password);
-      emit(AuthSuccess());
-    } on FirebaseAuthException catch (e) {
-      emit(AuthError(_getErrorMessage(e.code)));
+      final result = await _authService.signInWithEmail(event.email, event.password);
+      if (result != null) {
+        emit(AuthSuccess());
+      } else {
+        emit(const AuthError('Login failed. Please check your credentials.'));
+      }
     } catch (e) {
-      emit(AuthError('Login failed. Please try again.'));
+      emit(AuthError(_getErrorMessage(e.toString())));
     }
   }
 
   Future<void> _onSignup(SignupEvent event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
     try {
-      final credential = await _authService.signUpWithEmail(
+      final result = await _authService.signUpWithEmail(
         event.email,
         event.password,
         event.name,
       );
 
-      if (credential.user != null) {
+      if (result != null && result.user != null) {
         final userModel = UserModel(
-          uid: credential.user!.uid,
+          uid: result.user!.uid,
           name: event.name,
           email: event.email,
           createdAt: DateTime.now(),
         );
         await _firestoreService.createUserProfile(userModel);
+        emit(AuthSuccess());
+      } else {
+        emit(const AuthError('Signup failed. Please try again.'));
       }
-
-      emit(AuthSuccess());
-    } on FirebaseAuthException catch (e) {
-      emit(AuthError(_getErrorMessage(e.code)));
     } catch (e) {
-      emit(AuthError('Signup failed. Please try again.'));
+      emit(AuthError(_getErrorMessage(e.toString())));
     }
   }
 
   Future<void> _onGoogleAuth(GoogleAuthEvent event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
     try {
-      final credential = await _authService.signInWithGoogle();
-      if (credential == null) {
-        emit(const AuthError('Google Sign-In was cancelled.'));
-        return;
-      }
-
-      final user = credential.user;
-      if (user != null) {
+      final result = await _authService.signInWithGoogle();
+      if (result != null && result.user != null) {
+        final user = result.user!;
         final existingUser = await _firestoreService.getUserProfile(user.uid);
         if (existingUser == null) {
           final userModel = UserModel(
@@ -79,21 +80,35 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           );
           await _firestoreService.createUserProfile(userModel);
         }
+        emit(AuthSuccess());
+      } else {
+        emit(const AuthError('Google Sign-In was cancelled.'));
       }
-
-      emit(AuthSuccess());
     } catch (e) {
-      emit(AuthError('Google Sign-In failed. Please try again.'));
+      emit(AuthError(_getErrorMessage(e.toString())));
     }
   }
 
   Future<void> _onGuestLogin(GuestLoginEvent event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
     try {
-      await _authService.signInAnonymously();
-      emit(AuthSuccess());
+      final result = await _authService.signInAnonymously();
+      if (result != null) {
+        emit(AuthSuccess());
+      } else {
+        emit(const AuthError('Guest login failed.'));
+      }
     } catch (e) {
-      emit(AuthError('Guest login failed. Please try again.'));
+      emit(AuthError(_getErrorMessage(e.toString())));
+    }
+  }
+
+  Future<void> _onLogout(LogoutEvent event, Emitter<AuthState> emit) async {
+    try {
+      await _authService.signOut();
+      emit(AuthInitial());
+    } catch (e) {
+      emit(AuthError(_getErrorMessage(e.toString())));
     }
   }
 
@@ -101,24 +116,24 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthInitial());
   }
 
-  String _getErrorMessage(String code) {
-    switch (code) {
-      case 'user-not-found':
-        return 'No user found with this email.';
-      case 'wrong-password':
-        return 'Incorrect password.';
-      case 'email-already-in-use':
-        return 'This email is already registered.';
-      case 'weak-password':
-        return 'Password is too weak.';
-      case 'invalid-email':
-        return 'Invalid email address.';
-      case 'user-disabled':
-        return 'This account has been disabled.';
-      case 'too-many-requests':
-        return 'Too many attempts. Please try again later.';
-      default:
-        return 'An error occurred. Please try again.';
+  String _getErrorMessage(String error) {
+    if (error.contains('user-not-found')) {
+      return 'No user found with this email.';
+    } else if (error.contains('wrong-password')) {
+      return 'Incorrect password.';
+    } else if (error.contains('email-already-in-use')) {
+      return 'This email is already registered.';
+    } else if (error.contains('weak-password')) {
+      return 'Password is too weak.';
+    } else if (error.contains('invalid-email')) {
+      return 'Invalid email address.';
+    } else if (error.contains('user-disabled')) {
+      return 'This account has been disabled.';
+    } else if (error.contains('too-many-requests')) {
+      return 'Too many attempts. Please try again later.';
+    } else if (error.contains('network-request-failed')) {
+      return 'Network error. Please check your connection.';
     }
+    return 'An error occurred. Please try again.';
   }
 }

@@ -1,232 +1,257 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import '../widgets/custom_bottom_nav.dart';
-import '../bloc/home_bloc.dart';
-import '../bloc/home_event.dart';
-import '../bloc/home_state.dart';
 
-class HomepageScreen extends StatefulWidget {
-  const HomepageScreen({super.key});
+class HomeContent extends StatelessWidget {
+  const HomeContent({super.key});
 
   @override
-  State<HomepageScreen> createState() => _HomepageScreenState();
-}
-
-class _HomepageScreenState extends State<HomepageScreen> {
-  @override
-  void initState() {
-    super.initState();
-    context.read<HomeBloc>().add(const ChangeTabEvent(0));
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('ZambiConnect'),
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        elevation: 0,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 16),
+            const Text(
+              'Welcome, User!',
+              style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF333333),
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Ready to explore new jobs, volunteer projects and eco-tours across Zambia?',
+              style: TextStyle(
+                fontSize: 16,
+                color: Color(0xFF666666),
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 32),
+            GridView.count(
+              crossAxisCount: 2,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              children: [
+                _ActionCard(
+                  title: 'Find Job',
+                  icon: Icons.work_rounded,
+                  color: const Color(0xFF2196F3),
+                  onTap: () => _navigateToTab(context, 1),
+                ),
+                _ActionCard(
+                  title: 'Volunteer',
+                  icon: Icons.volunteer_activism_rounded,
+                  color: const Color(0xFF4CAF50),
+                  onTap: () => _navigateToTab(context, 2),
+                ),
+                _ActionCard(
+                  title: 'Emergency',
+                  icon: Icons.emergency_rounded,
+                  color: const Color(0xFFFF5722),
+                  onTap: () => _showEmergencyDialog(context),
+                ),
+                _ActionCard(
+                  title: 'Explore',
+                  icon: Icons.travel_explore_rounded,
+                  color: const Color(0xFFFFC107),
+                  onTap: () => _navigateToTab(context, 3),
+                ),
+              ],
+            ),
+            const SizedBox(height: 40),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: const Color(0xFF2E7D32).withAlpha(25),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Text(
+                'Together, we\'re building a greener and more connected Zambia — one job, one project and one journey at a time.',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF333333),
+                  height: 1.6,
+                  fontStyle: FontStyle.italic,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
-  void _onItemTapped(BuildContext context, int index) {
-    final homeBloc = context.read<HomeBloc>();
-    final currentState = homeBloc.state;
-
-    if (currentState is HomeLoaded && currentState.currentTab == index) {
-      return;
+  void _navigateToTab(BuildContext context, int index) {
+    final mainShellState = context.findAncestorStateOfType<State>();
+    if (mainShellState != null && mainShellState.mounted) {
+      (mainShellState as dynamic)._onTabSelected(index);
     }
-
-    homeBloc.add(ChangeTabEvent(index));
-
-    switch (index) {
-      case 0:
-        break;
-      case 1:
-        Navigator.pushReplacementNamed(context, '/jobs');
-        break;
-      case 2:
-        Navigator.pushReplacementNamed(context, '/volunteer');
-        break;
-      case 3:
-        Navigator.pushReplacementNamed(context, '/explore');
-        break;
-      case 4:
-        Navigator.pushReplacementNamed(context, '/profile');
-        break;
-    }
   }
 
-  void _navigateToFindJob(BuildContext context) {
-    _onItemTapped(context, 1);
-  }
-
-  void _navigateToVolunteer(BuildContext context) {
-    _onItemTapped(context, 2);
-  }
-
-  void _navigateToExplore(BuildContext context) {
-    _onItemTapped(context, 3);
-  }
-
-  void _navigateToEmergency(BuildContext context) {
+  void _showEmergencyDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Emergency Contacts'),
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(Icons.emergency_rounded, color: Colors.red.shade600),
+            const SizedBox(width: 12),
+            const Text('Emergency Contacts'),
+          ],
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            Text('Police: 999', style: TextStyle(fontSize: 16)),
-            SizedBox(height: 8),
-            Text('Ambulance: 991', style: TextStyle(fontSize: 16)),
-            SizedBox(height: 8),
-            Text('Fire: 993', style: TextStyle(fontSize: 16)),
-            SizedBox(height: 8),
-            Text('ZESCO: 1144', style: TextStyle(fontSize: 16)),
+          children: [
+            _EmergencyItem(number: '999', label: 'Police'),
+            _EmergencyItem(number: '991', label: 'Ambulance'),
+            _EmergencyItem(number: '993', label: 'Fire Brigade'),
+            _EmergencyItem(number: '1144', label: 'ZESCO'),
           ],
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(ctx),
             child: const Text('Close'),
           ),
         ],
       ),
     );
   }
+}
+
+class _ActionCard extends StatefulWidget {
+  final String title;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _ActionCard({
+    required this.title,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
 
   @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<HomeBloc, HomeState>(
-      builder: (context, state) {
-        final currentTab = state is HomeLoaded ? state.currentTab : 0;
+  State<_ActionCard> createState() => _ActionCardState();
+}
 
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('ZambiConnect'),
-            backgroundColor: Colors.white,
-          ),
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 24),
-                const Text(
-                  'Welcome, User!',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF333333),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Ready to explore new jobs, volunteer projects and eco-tours across Zambia?',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Color(0xFF666666),
-                    height: 1.5,
-                  ),
-                ),
-                const SizedBox(height: 32),
-                GridView.count(
-                  crossAxisCount: 2,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  children: [
-                    _buildActionCard(
-                      title: 'Find Job',
-                      icon: Icons.work_outline,
-                      onTap: () => _navigateToFindJob(context),
-                      backgroundColor: const Color(0xFF2196F3),
-                    ),
-                    _buildActionCard(
-                      title: 'Volunteer',
-                      icon: Icons.people_outline,
-                      onTap: () => _navigateToVolunteer(context),
-                      backgroundColor: const Color(0xFF4CAF50),
-                    ),
-                    _buildActionCard(
-                      title: 'Emergency',
-                      icon: Icons.local_hospital_outlined,
-                      onTap: () => _navigateToEmergency(context),
-                      backgroundColor: const Color(0xFFFF5722),
-                    ),
-                    _buildActionCard(
-                      title: 'Explore',
-                      icon: Icons.location_on_outlined,
-                      onTap: () => _navigateToExplore(context),
-                      backgroundColor: const Color(0xFFFFC107),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 40),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF2E7D32).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Text(
-                    'Together, we\'re building a greener and more connected Zambia — one job, one project and one journey at a time.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF333333),
-                      height: 1.5,
-                      fontStyle: FontStyle.italic,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          bottomNavigationBar: CustomBottomNav(
-            currentIndex: currentTab,
-            onTap: (index) => _onItemTapped(context, index),
-          ),
-        );
-      },
+class _ActionCardState extends State<_ActionCard> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 100),
+      vsync: this,
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
   }
 
-  Widget _buildActionCard({
-    required String title,
-    required IconData icon,
-    required VoidCallback onTap,
-    required Color backgroundColor,
-  }) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => _controller.forward(),
+      onTapUp: (_) {
+        _controller.reverse();
+        widget.onTap();
+      },
+      onTapCancel: () => _controller.reverse(),
+      child: AnimatedBuilder(
+        animation: _scaleAnimation,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: _scaleAnimation.value,
+            child: child,
+          );
+        },
         child: Container(
           decoration: BoxDecoration(
-            color: backgroundColor,
-            borderRadius: BorderRadius.circular(16),
+            color: widget.color,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: widget.color.withAlpha(100),
+                blurRadius: 12,
+                offset: const Offset(0, 6),
+              ),
+            ],
           ),
-          padding: const EdgeInsets.all(20),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                icon,
-                size: 48,
-                color: Colors.white,
-              ),
+              Icon(widget.icon, size: 48, color: Colors.white),
               const SizedBox(height: 12),
               Text(
-                title,
+                widget.title,
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
                 ),
-                textAlign: TextAlign.center,
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _EmergencyItem extends StatelessWidget {
+  final String number;
+  final String label;
+
+  const _EmergencyItem({required this.number, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(fontSize: 16)),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: const Color(0xFF2E7D32).withAlpha(25),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              number,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF2E7D32),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

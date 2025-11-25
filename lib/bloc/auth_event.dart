@@ -52,3 +52,7 @@ class GuestLoginEvent extends AuthEvent {
 class ResetAuthEvent extends AuthEvent {
   const ResetAuthEvent();
 }
+
+class LogoutEvent extends AuthEvent {
+  const LogoutEvent();
+}

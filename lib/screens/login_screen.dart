@@ -5,7 +5,7 @@ import '../widgets/custom_textfield.dart';
 import '../widgets/social_button.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
-import '../bloc/auth_state.dart'; // Add this import
+import '../bloc/auth_state.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -97,25 +97,19 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 32),
-                
-                // Email Field
                 CustomTextField(
                   label: 'Email Address',
                   controller: _emailController,
                   validator: _emailValidator,
                 ),
                 const SizedBox(height: 20),
-                
-                // Password Field
                 CustomTextField(
                   label: 'Password',
                   obscureText: true,
                   controller: _passwordController,
                   validator: _passwordValidator,
                   suffixIcon: TextButton(
-                    onPressed: () {
-                      // Handle forgot password
-                    },
+                    onPressed: () {},
                     child: const Text(
                       'Forgot Password?',
                       style: TextStyle(
@@ -126,8 +120,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                
-                // Keep me signed in
                 Row(
                   children: [
                     Checkbox(
@@ -142,8 +134,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ],
                 ),
                 const SizedBox(height: 24),
-                
-                // Divider
                 const Row(
                   children: [
                     Expanded(child: Divider()),
@@ -155,8 +145,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ],
                 ),
                 const SizedBox(height: 24),
-                
-                // Login Button
                 BlocBuilder<AuthBloc, AuthState>(
                   builder: (context, state) {
                     return CustomButton(
@@ -167,8 +155,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                
-                // Google Button
                 SocialButton(
                   text: 'Continue with Google',
                   onPressed: () => _handleGoogleLogin(context),
@@ -181,16 +167,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                
-                // Guest Button
                 CustomButton(
                   text: 'Continue as guest',
                   onPressed: () => _handleGuestLogin(context),
                   isPrimary: false,
                 ),
                 const SizedBox(height: 24),
-                
-                // Sign up link
                 Center(
                   child: GestureDetector(
                     onTap: () => _navigateToSignup(context),

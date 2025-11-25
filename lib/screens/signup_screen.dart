@@ -5,7 +5,7 @@ import '../widgets/custom_textfield.dart';
 import '../widgets/social_button.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
-import '../bloc/auth_state.dart'; // Add this import
+import '../bloc/auth_state.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -105,24 +105,18 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                 ),
                 const SizedBox(height: 32),
-                
-                // Name Field
                 CustomTextField(
                   label: 'Name',
                   controller: _nameController,
                   validator: _nameValidator,
                 ),
                 const SizedBox(height: 20),
-                
-                // Email Field
                 CustomTextField(
                   label: 'Email Address',
                   controller: _emailController,
                   validator: _emailValidator,
                 ),
                 const SizedBox(height: 20),
-                
-                // Password Field
                 CustomTextField(
                   label: 'Password',
                   obscureText: true,
@@ -130,8 +124,6 @@ class _SignupScreenState extends State<SignupScreen> {
                   validator: _passwordValidator,
                 ),
                 const SizedBox(height: 16),
-                
-                // Terms and Conditions
                 Row(
                   children: [
                     Checkbox(
@@ -161,8 +153,6 @@ class _SignupScreenState extends State<SignupScreen> {
                   ],
                 ),
                 const SizedBox(height: 24),
-                
-                // Divider
                 const Row(
                   children: [
                     Expanded(child: Divider()),
@@ -174,8 +164,6 @@ class _SignupScreenState extends State<SignupScreen> {
                   ],
                 ),
                 const SizedBox(height: 24),
-                
-                // Sign Up Button
                 BlocBuilder<AuthBloc, AuthState>(
                   builder: (context, state) {
                     return CustomButton(
@@ -186,8 +174,6 @@ class _SignupScreenState extends State<SignupScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                
-                // Google Button
                 SocialButton(
                   text: 'Sign Up with Google',
                   onPressed: () => _handleGoogleSignup(context),
@@ -200,8 +186,6 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                
-                // Back to login
                 Center(
                   child: GestureDetector(
                     onTap: () => _navigateToLogin(context),
