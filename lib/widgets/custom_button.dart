@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zamconnect/theme/app_theme.dart';
 
 class CustomButton extends StatelessWidget {
   final String text;
@@ -30,7 +31,7 @@ class CustomButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(8),
             side: isPrimary
                 ? BorderSide.none
-                : const BorderSide(color: AppTheme.primaryColor),
+                : BorderSide(color: AppTheme.primaryColor),
           ),
           padding: const EdgeInsets.symmetric(vertical: 16),
         ),

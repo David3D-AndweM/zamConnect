@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zamconnect/theme/app_theme.dart';
 
 class SocialButton extends StatelessWidget {
   final String text;
@@ -20,7 +21,7 @@ class SocialButton extends StatelessWidget {
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
           foregroundColor: AppTheme.textColor,
-          side: const BorderSide(color: AppTheme.borderColor),
+          side: BorderSide(color: AppTheme.borderColor),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
           ),

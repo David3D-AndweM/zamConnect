@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../widgets/custom_bottom_nav.dart';
 import '../bloc/home_bloc.dart';
 import '../bloc/home_event.dart';
-import '../bloc/home_state.dart'; // Add this import
+import '../bloc/home_state.dart';
 
 class HomepageScreen extends StatefulWidget {
   const HomepageScreen({super.key});
@@ -16,25 +16,21 @@ class _HomepageScreenState extends State<HomepageScreen> {
   @override
   void initState() {
     super.initState();
-    // Initialize home bloc with default tab
     context.read<HomeBloc>().add(const ChangeTabEvent(0));
   }
 
   void _onItemTapped(BuildContext context, int index) {
     final homeBloc = context.read<HomeBloc>();
     final currentState = homeBloc.state;
-    
-    // Check if current tab is the same, if yes then return
+
     if (currentState is HomeLoaded && currentState.currentTab == index) {
       return;
     }
-    
+
     homeBloc.add(ChangeTabEvent(index));
-    
-    // Navigate to different screens based on index
+
     switch (index) {
       case 0:
-        // Already on homepage
         break;
       case 1:
         Navigator.pushReplacementNamed(context, '/jobs');
@@ -63,8 +59,32 @@ class _HomepageScreenState extends State<HomepageScreen> {
     _onItemTapped(context, 3);
   }
 
-  void _navigateToProfile(BuildContext context) {
-    _onItemTapped(context, 4);
+  void _navigateToEmergency(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Emergency Contacts'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            Text('Police: 999', style: TextStyle(fontSize: 16)),
+            SizedBox(height: 8),
+            Text('Ambulance: 991', style: TextStyle(fontSize: 16)),
+            SizedBox(height: 8),
+            Text('Fire: 993', style: TextStyle(fontSize: 16)),
+            SizedBox(height: 8),
+            Text('ZESCO: 1144', style: TextStyle(fontSize: 16)),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -72,7 +92,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
     return BlocBuilder<HomeBloc, HomeState>(
       builder: (context, state) {
         final currentTab = state is HomeLoaded ? state.currentTab : 0;
-        
+
         return Scaffold(
           appBar: AppBar(
             title: const Text('ZambiConnect'),
@@ -84,8 +104,6 @@ class _HomepageScreenState extends State<HomepageScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 24),
-                
-                // Welcome Section
                 const Text(
                   'Welcome, User!',
                   style: TextStyle(
@@ -95,7 +113,6 @@ class _HomepageScreenState extends State<HomepageScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                
                 const Text(
                   'Ready to explore new jobs, volunteer projects and eco-tours across Zambia?',
                   style: TextStyle(
@@ -105,8 +122,6 @@ class _HomepageScreenState extends State<HomepageScreen> {
                   ),
                 ),
                 const SizedBox(height: 32),
-                
-                // Action Buttons Grid
                 GridView.count(
                   crossAxisCount: 2,
                   shrinkWrap: true,
@@ -118,31 +133,29 @@ class _HomepageScreenState extends State<HomepageScreen> {
                       title: 'Find Job',
                       icon: Icons.work_outline,
                       onTap: () => _navigateToFindJob(context),
-                      color: const Color(0xFF2E7D32),
+                      backgroundColor: const Color(0xFF2196F3),
                     ),
                     _buildActionCard(
                       title: 'Volunteer',
                       icon: Icons.people_outline,
                       onTap: () => _navigateToVolunteer(context),
-                      color: const Color(0xFF4CAF50),
+                      backgroundColor: const Color(0xFF4CAF50),
+                    ),
+                    _buildActionCard(
+                      title: 'Emergency',
+                      icon: Icons.local_hospital_outlined,
+                      onTap: () => _navigateToEmergency(context),
+                      backgroundColor: const Color(0xFFFF5722),
                     ),
                     _buildActionCard(
                       title: 'Explore',
-                      icon: Icons.explore_outlined,
+                      icon: Icons.location_on_outlined,
                       onTap: () => _navigateToExplore(context),
-                      color: const Color(0xFF2196F3),
-                    ),
-                    _buildActionCard(
-                      title: 'My profile',
-                      icon: Icons.person_outline,
-                      onTap: () => _navigateToProfile(context),
-                      color: const Color(0xFF9C27B0),
+                      backgroundColor: const Color(0xFFFFC107),
                     ),
                   ],
                 ),
                 const SizedBox(height: 40),
-                
-                // Mission Statement
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(20),
@@ -151,7 +164,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Text(
-                    'Together, we\'re building a greener and more connected Zambia — one job, one project and one journey at a time. 😊',
+                    'Together, we\'re building a greener and more connected Zambia — one job, one project and one journey at a time.',
                     style: TextStyle(
                       fontSize: 14,
                       color: Color(0xFF333333),
@@ -177,33 +190,37 @@ class _HomepageScreenState extends State<HomepageScreen> {
     required String title,
     required IconData icon,
     required VoidCallback onTap,
-    required Color color,
+    required Color backgroundColor,
   }) {
     return Card(
-      elevation: 2,
+      elevation: 4,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         child: Container(
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            borderRadius: BorderRadius.circular(16),
+          ),
           padding: const EdgeInsets.all(20),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
                 icon,
-                size: 32,
-                color: color,
+                size: 48,
+                color: Colors.white,
               ),
               const SizedBox(height: 12),
               Text(
                 title,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: color,
+                  color: Colors.white,
                 ),
                 textAlign: TextAlign.center,
               ),
