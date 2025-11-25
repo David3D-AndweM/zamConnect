@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../widgets/custom_bottom_nav.dart';
+import '../bloc/home_bloc.dart';
+import '../bloc/home_event.dart';
+import '../bloc/home_state.dart'; // Add this import
 
 class HomepageScreen extends StatefulWidget {
   const HomepageScreen({super.key});
@@ -9,14 +13,23 @@ class HomepageScreen extends StatefulWidget {
 }
 
 class _HomepageScreenState extends State<HomepageScreen> {
-  int _currentIndex = 0; // Home is active
+  @override
+  void initState() {
+    super.initState();
+    // Initialize home bloc with default tab
+    context.read<HomeBloc>().add(const ChangeTabEvent(0));
+  }
 
-  void _onItemTapped(int index) {
-    if (index == _currentIndex) return;
+  void _onItemTapped(BuildContext context, int index) {
+    final homeBloc = context.read<HomeBloc>();
+    final currentState = homeBloc.state;
     
-    setState(() {
-      _currentIndex = index;
-    });
+    // Check if current tab is the same, if yes then return
+    if (currentState is HomeLoaded && currentState.currentTab == index) {
+      return;
+    }
+    
+    homeBloc.add(ChangeTabEvent(index));
     
     // Navigate to different screens based on index
     switch (index) {
@@ -38,119 +51,125 @@ class _HomepageScreenState extends State<HomepageScreen> {
     }
   }
 
-  void _navigateToFindJob() {
-    _onItemTapped(1); // Navigate to Jobs tab
+  void _navigateToFindJob(BuildContext context) {
+    _onItemTapped(context, 1);
   }
 
-  void _navigateToVolunteer() {
-    _onItemTapped(2); // Navigate to Volunteer tab
+  void _navigateToVolunteer(BuildContext context) {
+    _onItemTapped(context, 2);
   }
 
-  void _navigateToExplore() {
-    _onItemTapped(3); // Navigate to Explore tab
+  void _navigateToExplore(BuildContext context) {
+    _onItemTapped(context, 3);
   }
 
-  void _navigateToProfile() {
-    _onItemTapped(4); // Navigate to Profile tab
+  void _navigateToProfile(BuildContext context) {
+    _onItemTapped(context, 4);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('ZambiConnect'),
-        backgroundColor: Colors.white,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 24),
-            
-            // Welcome Section
-            const Text(
-              'Welcome, User!',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF333333),
-              ),
-            ),
-            const SizedBox(height: 16),
-            
-            const Text(
-              'Ready to explore new jobs, volunteer projects and eco-tours across Zambia?',
-              style: TextStyle(
-                fontSize: 16,
-                color: Color(0xFF666666),
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: 32),
-            
-            // Action Buttons Grid
-            GridView.count(
-              crossAxisCount: 2,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
+    return BlocBuilder<HomeBloc, HomeState>(
+      builder: (context, state) {
+        final currentTab = state is HomeLoaded ? state.currentTab : 0;
+        
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('ZambiConnect'),
+            backgroundColor: Colors.white,
+          ),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildActionCard(
-                  title: 'Find Job',
-                  icon: Icons.work_outline,
-                  onTap: _navigateToFindJob,
-                  color: Color(0xFF2E7D32),
+                const SizedBox(height: 24),
+                
+                // Welcome Section
+                const Text(
+                  'Welcome, User!',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF333333),
+                  ),
                 ),
-                _buildActionCard(
-                  title: 'Volunteer',
-                  icon: Icons.people_outline,
-                  onTap: _navigateToVolunteer,
-                  color: Color(0xFF4CAF50),
+                const SizedBox(height: 16),
+                
+                const Text(
+                  'Ready to explore new jobs, volunteer projects and eco-tours across Zambia?',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFF666666),
+                    height: 1.5,
+                  ),
                 ),
-                _buildActionCard(
-                  title: 'Explore',
-                  icon: Icons.explore_outlined,
-                  onTap: _navigateToExplore,
-                  color: Color(0xFF2196F3),
+                const SizedBox(height: 32),
+                
+                // Action Buttons Grid
+                GridView.count(
+                  crossAxisCount: 2,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  children: [
+                    _buildActionCard(
+                      title: 'Find Job',
+                      icon: Icons.work_outline,
+                      onTap: () => _navigateToFindJob(context),
+                      color: const Color(0xFF2E7D32),
+                    ),
+                    _buildActionCard(
+                      title: 'Volunteer',
+                      icon: Icons.people_outline,
+                      onTap: () => _navigateToVolunteer(context),
+                      color: const Color(0xFF4CAF50),
+                    ),
+                    _buildActionCard(
+                      title: 'Explore',
+                      icon: Icons.explore_outlined,
+                      onTap: () => _navigateToExplore(context),
+                      color: const Color(0xFF2196F3),
+                    ),
+                    _buildActionCard(
+                      title: 'My profile',
+                      icon: Icons.person_outline,
+                      onTap: () => _navigateToProfile(context),
+                      color: const Color(0xFF9C27B0),
+                    ),
+                  ],
                 ),
-                _buildActionCard(
-                  title: 'My profile',
-                  icon: Icons.person_outline,
-                  onTap: _navigateToProfile,
-                  color: Color(0xFF9C27B0),
+                const SizedBox(height: 40),
+                
+                // Mission Statement
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2E7D32).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text(
+                    'Together, we\'re building a greener and more connected Zambia — one job, one project and one journey at a time. 😊',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFF333333),
+                      height: 1.5,
+                      fontStyle: FontStyle.italic,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 40),
-            
-            // Mission Statement
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Color(0xFF2E7D32).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Text(
-                'Together, we\'re building a greener and more connected Zambia — one job, one project and one journey at a time. 😊',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFF333333),
-                  height: 1.5,
-                  fontStyle: FontStyle.italic,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: CustomBottomNav(
-        currentIndex: _currentIndex,
-        onTap: _onItemTapped,
-      ),
+          ),
+          bottomNavigationBar: CustomBottomNav(
+            currentIndex: currentTab,
+            onTap: (index) => _onItemTapped(context, index),
+          ),
+        );
+      },
     );
   }
 
