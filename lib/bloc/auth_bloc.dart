@@ -24,8 +24,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       await _authService.signInWithEmail(event.email, event.password);
       emit(AuthSuccess());
     } on FirebaseAuthException catch (e) {
+      print('Login FirebaseAuthException: code=${e.code}, message=${e.message}');
       emit(AuthError(_getErrorMessage(e.code)));
     } catch (e) {
+      print('Login error: $e');
       emit(AuthError('Login failed. Please try again.'));
     }
   }
@@ -51,8 +53,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
       emit(AuthSuccess());
     } on FirebaseAuthException catch (e) {
+      print('Signup FirebaseAuthException: code=${e.code}, message=${e.message}');
       emit(AuthError(_getErrorMessage(e.code)));
     } catch (e) {
+      print('Signup error: $e');
       emit(AuthError('Signup failed. Please try again.'));
     }
   }
