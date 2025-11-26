@@ -114,7 +114,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   validator: _passwordValidator,
                   suffixIcon: TextButton(
                     onPressed: () {
-                      // Handle forgot password
+                      Navigator.pushNamed(context, '/forgot-password');
                     },
                     child: const Text(
                       'Forgot Password?',

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../widgets/custom_bottom_nav.dart';
 import '../bloc/home_bloc.dart';
 import '../bloc/home_event.dart';
 import '../bloc/home_state.dart';
+import '../services/firestore_service.dart';
+import '../models/user_model.dart';
 
 class HomepageScreen extends StatefulWidget {
   const HomepageScreen({super.key});
@@ -13,10 +16,26 @@ class HomepageScreen extends StatefulWidget {
 }
 
 class _HomepageScreenState extends State<HomepageScreen> {
+  String _userName = 'User';
+  final FirestoreService _firestoreService = FirestoreService();
+
   @override
   void initState() {
     super.initState();
     context.read<HomeBloc>().add(const ChangeTabEvent(0));
+    _loadUserName();
+  }
+
+  Future<void> _loadUserName() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final profile = await _firestoreService.getUserProfile(user.uid);
+      if (mounted) {
+        setState(() {
+          _userName = profile?.name ?? user.displayName ?? 'User';
+        });
+      }
+    }
   }
 
   void _onItemTapped(BuildContext context, int index) {
@@ -104,9 +123,9 @@ class _HomepageScreenState extends State<HomepageScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 24),
-                const Text(
-                  'Welcome, User!',
-                  style: TextStyle(
+                Text(
+                  'Welcome, $_userName!',
+                  style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w700,
                     color: Color(0xFF333333),

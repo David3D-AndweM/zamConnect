@@ -1,4 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../services/firestore_service.dart';
+import '../models/user_model.dart';
+import '../bloc/auth_bloc.dart';
+import '../bloc/auth_event.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../widgets/custom_bottom_nav.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -9,7 +15,32 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  User? _currentUser;
+  UserModel? _userProfile;
+  final FirestoreService _firestoreService = FirestoreService();
   int _currentIndex = 4;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final user = FirebaseAuth.instance.currentUser;
+    setState(() {
+      _currentUser = user;
+    });
+
+    if (user != null) {
+      final profile = await _firestoreService.getUserProfile(user.uid);
+      if (mounted) {
+        setState(() {
+          _userProfile = profile;
+        });
+      }
+    }
+  }
 
   void _onItemTapped(int index) {
     if (index == _currentIndex) return;
@@ -27,15 +58,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  void _handleMenuTap(String menuItem) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$menuItem - Coming soon!'),
-        duration: const Duration(seconds: 1),
-      ),
-    );
-  }
-
   void _handleLogout() {
     showDialog(
       context: context,
@@ -50,6 +72,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
+              context.read<AuthBloc>().add(ResetAuthEvent()); // Reset Bloc state
+              FirebaseAuth.instance.signOut(); // Ensure Firebase signout
               Navigator.pushReplacementNamed(context, '/login');
             },
             style: ElevatedButton.styleFrom(
@@ -66,13 +90,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'ZambiConnect',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.white,
+        title: const Text('Profile'),
         elevation: 0,
+        backgroundColor: Colors.white,
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -81,38 +102,57 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _buildProfileSection(),
             const SizedBox(height: 32),
             _buildMenuItem(
-              icon: Icons.person_outline,
-              title: 'My Account',
-              onTap: () => _handleMenuTap('My Account'),
+              icon: Icons.edit,
+              title: 'Edit Profile',
+              onTap: () {
+                Navigator.pushNamed(context, '/edit-profile');
+              },
             ),
             _buildMenuItem(
-              icon: Icons.work_outline,
-              title: 'My Applications',
-              onTap: () => _handleMenuTap('My Applications'),
+              icon: Icons.bookmark,
+              title: 'My Activity',
+              onTap: () {
+                Navigator.pushNamed(context, '/my-activity');
+              },
             ),
             _buildMenuItem(
-              icon: Icons.volunteer_activism_outlined,
-              title: 'My Volunteering',
-              onTap: () => _handleMenuTap('My Volunteering'),
-            ),
-            _buildMenuItem(
-              icon: Icons.bookmark_outline,
-              title: 'Saved Destinations',
-              onTap: () => _handleMenuTap('Saved Destinations'),
-            ),
-            _buildMenuItem(
-              icon: Icons.settings_outlined,
+              icon: Icons.settings,
               title: 'Settings',
-              onTap: () => _handleMenuTap('Settings'),
+              onTap: () {
+                Navigator.pushNamed(context, '/settings');
+              },
             ),
             _buildMenuItem(
               icon: Icons.help_outline,
               title: 'Help & Support',
-              onTap: () => _handleMenuTap('Help & Support'),
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Help & Support - Coming soon!')),
+                );
+              },
             ),
-            const SizedBox(height: 16),
+            _buildMenuItem(
+              icon: Icons.info_outline,
+              title: 'About',
+              onTap: () {
+                showAboutDialog(
+                  context: context,
+                  applicationName: 'ZambiConnect',
+                  applicationVersion: '1.0.0',
+                  applicationLegalese: '© 2024 ZambiConnect. All rights reserved.',
+                  children: [
+                    const SizedBox(height: 16),
+                    const Text(
+                      'ZambiConnect - Jobs, Volunteering & Eco-Tours in Zambia.\n\n'
+                      'Together, we\'re building a greener and more connected Zambia.',
+                    ),
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: 24),
             _buildLogoutButton(),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
           ],
         ),
       ),
@@ -124,25 +164,70 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildProfileSection() {
+    if (_currentUser == null) {
+      return Column(
+        children: [
+          Container(
+            width: 100,
+            height: 100,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.person,
+              size: 60,
+              color: Colors.grey.shade600,
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Guest User',
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF212121),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Sign in to access all features',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey.shade600,
+            ),
+          ),
+        ],
+      );
+    }
+
     return Column(
       children: [
         Container(
           width: 100,
           height: 100,
           decoration: BoxDecoration(
-            color: Colors.grey.shade300,
+            color: const Color(0xFF2E7D32).withOpacity(0.1),
             shape: BoxShape.circle,
+            image: _currentUser?.photoURL != null
+                ? DecorationImage(
+                    image: NetworkImage(_currentUser!.photoURL!),
+                    fit: BoxFit.cover,
+                  )
+                : null,
           ),
-          child: Icon(
-            Icons.person,
-            size: 60,
-            color: Colors.grey.shade600,
-          ),
+          child: _currentUser?.photoURL == null
+              ? const Icon(
+                  Icons.person,
+                  size: 60,
+                  color: Color(0xFF2E7D32),
+                )
+              : null,
         ),
         const SizedBox(height: 16),
-        const Text(
-          'Guest User',
-          style: TextStyle(
+        Text(
+          _userProfile?.name ?? _currentUser?.displayName ?? 'User',
+          style: const TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.bold,
             color: Color(0xFF212121),
@@ -150,7 +235,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         const SizedBox(height: 4),
         Text(
-          'Sign in to access all features',
+          _currentUser?.email ?? '',
           style: TextStyle(
             fontSize: 14,
             color: Colors.grey.shade600,

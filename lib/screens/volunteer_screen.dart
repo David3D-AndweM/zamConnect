@@ -1,19 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../widgets/custom_bottom_nav.dart';
-
-class VolunteerOrg {
-  final String name;
-  final String description;
-  final IconData icon;
-  final Color iconColor;
-
-  const VolunteerOrg({
-    required this.name,
-    required this.description,
-    required this.icon,
-    required this.iconColor,
-  });
-}
+import '../services/volunteer_service.dart';
+import '../models/volunteer_model.dart';
+import 'volunteer_detail_screen.dart';
 
 class VolunteerScreen extends StatefulWidget {
   const VolunteerScreen({super.key});
@@ -24,45 +14,7 @@ class VolunteerScreen extends StatefulWidget {
 
 class _VolunteerScreenState extends State<VolunteerScreen> {
   int _currentIndex = 2;
-
-  final List<VolunteerOrg> _organizations = const [
-    VolunteerOrg(
-      name: 'Africa Access Water',
-      description: 'Help provide clean water access to rural communities across Zambia. Join our water conservation and well-building projects.',
-      icon: Icons.water_drop,
-      iconColor: Color(0xFF2196F3),
-    ),
-    VolunteerOrg(
-      name: 'WWF Zambia',
-      description: 'Protect wildlife and natural habitats. Participate in anti-poaching patrols, wildlife monitoring, and community education programs.',
-      icon: Icons.pets,
-      iconColor: Color(0xFF4CAF50),
-    ),
-    VolunteerOrg(
-      name: 'Lusaka City Council',
-      description: 'Urban development and community improvement projects. Help with tree planting, waste management, and public space beautification.',
-      icon: Icons.location_city,
-      iconColor: Color(0xFF9C27B0),
-    ),
-    VolunteerOrg(
-      name: 'ZICONA Zambia',
-      description: 'Environmental conservation and sustainable agriculture. Work on reforestation projects and teach sustainable farming practices.',
-      icon: Icons.eco,
-      iconColor: Color(0xFF2E7D32),
-    ),
-    VolunteerOrg(
-      name: 'Red Cross Zambia',
-      description: 'Humanitarian aid and disaster relief. Assist with health campaigns, first aid training, and emergency response activities.',
-      icon: Icons.health_and_safety,
-      iconColor: Color(0xFFF44336),
-    ),
-    VolunteerOrg(
-      name: 'Habitat for Humanity',
-      description: 'Build homes for families in need. Join construction teams and help create safe, affordable housing in Zambian communities.',
-      icon: Icons.home,
-      iconColor: Color(0xFFFF9800),
-    ),
-  ];
+  final VolunteerService _volunteerService = VolunteerService();
 
   void _onItemTapped(int index) {
     if (index == _currentIndex) return;
@@ -80,35 +32,31 @@ class _VolunteerScreenState extends State<VolunteerScreen> {
     }
   }
 
-  void _applyToVolunteer(VolunteerOrg org) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Join ${org.name}'),
-        content: Text('Would you like to apply to volunteer with ${org.name}?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Application submitted to ${org.name}!'),
-                  backgroundColor: const Color(0xFF2196F3),
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF2196F3),
-            ),
-            child: const Text('Apply', style: TextStyle(color: Colors.white)),
-          ),
-        ],
+  void _viewVolunteerDetails(VolunteerModel volunteer) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => VolunteerDetailScreen(volunteer: volunteer),
       ),
     );
+  }
+
+  IconData _getIconData(String iconName) {
+    switch (iconName) {
+      case 'water_drop': return Icons.water_drop;
+      case 'pets': return Icons.pets;
+      case 'location_city': return Icons.location_city;
+      case 'eco': return Icons.eco;
+      case 'health_and_safety': return Icons.health_and_safety;
+      case 'home': return Icons.home;
+      case 'nature_people': return Icons.nature_people;
+      case 'school': return Icons.school;
+      default: return Icons.volunteer_activism;
+    }
+  }
+
+  Color _getColor(String colorString) {
+    return Color(int.parse(colorString));
   }
 
   @override
@@ -123,12 +71,31 @@ class _VolunteerScreenState extends State<VolunteerScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: _organizations.length,
-        itemBuilder: (context, index) {
-          final org = _organizations[index];
-          return _buildVolunteerCard(org);
+      body: StreamBuilder<List<VolunteerModel>>(
+        stream: _volunteerService.getVolunteerOpportunities(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+
+          final volunteers = snapshot.data ?? [];
+
+          if (volunteers.isEmpty) {
+            return const Center(child: Text('No volunteer opportunities available.'));
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: volunteers.length,
+            itemBuilder: (context, index) {
+              final volunteer = volunteers[index];
+              return _buildVolunteerCard(volunteer);
+            },
+          );
         },
       ),
       bottomNavigationBar: CustomBottomNav(
@@ -138,7 +105,7 @@ class _VolunteerScreenState extends State<VolunteerScreen> {
     );
   }
 
-  Widget _buildVolunteerCard(VolunteerOrg org) {
+  Widget _buildVolunteerCard(VolunteerModel volunteer) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 2,
@@ -165,15 +132,15 @@ class _VolunteerScreenState extends State<VolunteerScreen> {
                     borderRadius: BorderRadius.circular(25),
                   ),
                   child: Icon(
-                    org.icon,
-                    color: org.iconColor,
+                    _getIconData(volunteer.icon),
+                    color: _getColor(volunteer.iconColor),
                     size: 28,
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    org.name,
+                    volunteer.name,
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -185,7 +152,7 @@ class _VolunteerScreenState extends State<VolunteerScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              org.description,
+              volunteer.description,
               style: const TextStyle(
                 fontSize: 14,
                 color: Color(0xFF424242),
@@ -198,7 +165,7 @@ class _VolunteerScreenState extends State<VolunteerScreen> {
             Align(
               alignment: Alignment.centerRight,
               child: ElevatedButton(
-                onPressed: () => _applyToVolunteer(org),
+                onPressed: () => _viewVolunteerDetails(volunteer),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF2196F3),
                   foregroundColor: Colors.white,
@@ -208,7 +175,7 @@ class _VolunteerScreenState extends State<VolunteerScreen> {
                   ),
                 ),
                 child: const Text(
-                  'Apply',
+                  'View Details',
                   style: TextStyle(fontWeight: FontWeight.w600),
                 ),
               ),
