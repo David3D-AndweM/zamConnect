@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class JobModel {
   final String id;
   final String title;
@@ -36,7 +38,7 @@ class JobModel {
       'description': description,
       'salary': salary,
       'icon': icon,
-      'createdAt': createdAt,
+      'createdAt': Timestamp.fromDate(createdAt),
     };
   }
 }
