@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "250277162942",
+    "project_id": "zambiconnect",
+    "storage_bucket": "zambiconnect.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:250277162942:android:e0d4b85bed27cbf4b613ef",
+        "android_client_info": {
+          "package_name": "com.example.zamconnect"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBrcyMbi2Ymm24F92N8X0u-QVnwX4gEZZw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
